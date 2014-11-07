@@ -53,7 +53,7 @@ PORT (
 		ENET_TX_ER			: OUT STD_LOGIC;
 
 	-- FAN
-		FAN_CTRL				: INOUT STD_LOGIC;
+		FAN_CTRL				: OUT STD_LOGIC;
 
 	-- FL
 		FL_CE_N				: OUT STD_LOGIC;
@@ -279,5 +279,8 @@ HEX4		<= (OTHERS => '1');
 HEX5		<= (OTHERS => '1');
 HEX6		<= (OTHERS => '1');
 HEX7		<= (OTHERS => '1');
+
+--Turn fan off
+FAN_CTRL <= '0';
 
 END DE2i_150_DCC_TOP_ARCH;

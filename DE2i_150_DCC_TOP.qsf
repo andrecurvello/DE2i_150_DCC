@@ -977,10 +977,6 @@ set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulati
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name SDC_FILE src/DE2i_150_DCC_TOP.sdc
-set_global_assignment -name VHDL_FILE src/IP/PLL_1.vhd
-set_global_assignment -name VHDL_FILE src/HDIG_HEX.vhd
-set_global_assignment -name VHDL_FILE src/DE2i_150_DCC_TOP.vhd
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
 set_location_assignment PIN_G16 -to GPIO[0]
 set_location_assignment PIN_F17 -to GPIO[1]
@@ -1054,5 +1050,8 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[32]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
+set_global_assignment -name VHDL_FILE src/IP/PLL_1.vhd
+set_global_assignment -name VHDL_FILE src/HDIG_HEX.vhd
+set_global_assignment -name VHDL_FILE src/DE2i_150_DCC_TOP.vhd
 set_global_assignment -name QIP_FILE src/IP/PLL_1.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
