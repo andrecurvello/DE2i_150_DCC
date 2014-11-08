@@ -1050,8 +1050,13 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[32]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
+set_global_assignment -name VHDL_FILE src/AD_SPI_CONTROLLER.vhd
 set_global_assignment -name VHDL_FILE src/IP/PLL_1.vhd
 set_global_assignment -name VHDL_FILE src/HDIG_HEX.vhd
 set_global_assignment -name VHDL_FILE src/DE2i_150_DCC_TOP.vhd
 set_global_assignment -name QIP_FILE src/IP/PLL_1.qip
+set_global_assignment -name ENABLE_SIGNALTAP ON
+set_global_assignment -name USE_SIGNALTAP_FILE spi_stp1.stp
+set_global_assignment -name SIGNALTAP_FILE spi_stp1.stp
+set_global_assignment -name SLD_FILE db/spi_stp1_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

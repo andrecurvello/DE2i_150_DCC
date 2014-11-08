@@ -33,7 +33,7 @@ END AD_SPI_CONTROLLER;
 ARCHITECTURE AD_SPI_CONTROLLER_ARCH OF AD_SPI_CONTROLLER IS 
   
 	TYPE State_Type IS (IDLE, DATA_INTERPRET, ADDRESS_SHIFT_L, ADDRESS_SHIFT_H, DATA_READ_L,
-                      DATA_READ_H, DATA_READ_WE, DATA_WRITE_L, DATA_WRITE_H, ABORT_L, ABORT_H); 
+                      DATA_READ_H, DATA_READ_WE, DATA_WRITE_L, DATA_WRITE_H, DATA_WRITE_WT, ABORT_L, ABORT_H); 
 	SIGNAL sSPI_State  : State_Type; 
 	
 	SIGNAL sCnt					: INTEGER RANGE 0 TO 32;
@@ -73,8 +73,8 @@ BEGIN
 			AD_SCLK				<= '0';
 			sAD_SDI 				<= '0';
 			sAD_SDIO_IO			<= '1';  				--OUTPUT (NEED CHECK)
-			ADA_SPI_CS_n <= '1';
-			ADB_SPI_CS_n <= '1';
+			ADA_SPI_CS_n 		<= '1';
+			ADB_SPI_CS_n 		<= '1';
 			
 		ELSIF RISING_EDGE(CLK10) THEN
 			-- defaults
@@ -86,13 +86,13 @@ BEGIN
 
 				WHEN IDLE => 
 				  
-          AD_SCLK <= '0';
-					SPI_BUSY <= '0';
-					sSEL_FLAG_A <= '0';
-					sSEL_FLAG_B	<= '0';
-					ADA_SPI_CS_n <= '1';
-					ADB_SPI_CS_n <= '1';
-					sAD_SDIO_IO <= '1';  										            --OUTPUT (NEED CHECK)
+					AD_SCLK 			<= '0';
+					SPI_BUSY 		<= '0';
+					sSEL_FLAG_A 	<= '0';
+					sSEL_FLAG_B		<= '0';
+					ADA_SPI_CS_n 	<= '1';
+					ADB_SPI_CS_n 	<= '1';
+					sAD_SDIO_IO 	<= '1';  										            --OUTPUT (NEED CHECK)
 					sCnt <= 0; 										
 					IF SPI_DATA_IN_WEA = '1' THEN 
 						sSEL_FLAG_A <= '1';
@@ -205,8 +205,11 @@ BEGIN
 					IF sCnt > 1 THEN  
  						sSPI_State <= DATA_WRITE_L; 
  					ELSE
-						sSPI_State <= IDLE;
+						sSPI_State <= DATA_WRITE_WT;
 					END IF;
+				
+				WHEN DATA_WRITE_WT =>
+					sSPI_State <= IDLE;
 				
 				WHEN ABORT_L =>
 					sSPI_DATA_OUT <= x"FF";
