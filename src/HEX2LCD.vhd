@@ -38,8 +38,8 @@ BEGIN
   
 	 IF RST = '1' THEN                 		-- asynchronous global ST_RESET (active high) 
 	 
-      sADA_DATA_IN <= (OTHERS => '0');
-      sADB_DATA_IN <= (OTHERS => '0');
+      sADA_DATA_IN <= x"30";
+      sADB_DATA_IN <= x"30";
 		
     ELSIF RISING_EDGE(CLK) THEN  					-- rising clock edge 
 		

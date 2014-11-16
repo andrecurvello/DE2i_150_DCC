@@ -83,21 +83,21 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
         6 => (RS => '1', DATA => X"41", DELAY => WT_DEFAULT), -- A
         7 => (RS => '1', DATA => X"44", DELAY => WT_DEFAULT), -- D
         8 => (RS => '1', DATA => X"41", DELAY => WT_DEFAULT), -- A
-        9 => (RS => '1', DATA => X"4A", DELAY => WT_DEFAULT), -- :
+        9 => (RS => '1', DATA => X"3A", DELAY => WT_DEFAULT), -- :
         10 => (RS => '0', DATA => X"C0", DELAY => WT_DEFAULT), -- go to ADD 40
         11 => (RS => '1', DATA => X"41", DELAY => WT_DEFAULT), -- A
         12 => (RS => '1', DATA => X"44", DELAY => WT_DEFAULT), -- D
         13 => (RS => '1', DATA => X"42", DELAY => WT_DEFAULT), -- B
-        14 => (RS => '1', DATA => X"4A", DELAY => WT_DEFAULT) -- :  
+        14 => (RS => '1', DATA => X"3A", DELAY => WT_DEFAULT) -- :  
     );
     
   TYPE Data_op_type IS ARRAY(0 TO 5) OF Op_type;
   SIGNAL sData_op : Data_op_type
-    := (0 => (RS => '0', DATA => X"80", DELAY => WT_INIT), -- Address 0
-        1 => (RS => '1', DATA => X"30", DELAY => WT_INIT), -- ADA HIGH
-        2 => (RS => '1', DATA => X"38", DELAY => WT_INIT), -- ADA LOW
+    := (0 => (RS => '0', DATA => X"80", DELAY => WT_DEFAULT), -- Address 0
+        1 => (RS => '1', DATA => X"30", DELAY => WT_DEFAULT), -- ADA HIGH
+        2 => (RS => '1', DATA => X"38", DELAY => WT_DEFAULT), -- ADA LOW
         3 => (RS => '0', DATA => X"C0", DELAY => WT_DEFAULT), -- Address 40
-        4 => (RS => '1', DATA => X"0C", DELAY => WT_DEFAULT), -- ADB HIGH
+        4 => (RS => '1', DATA => X"30", DELAY => WT_DEFAULT), -- ADB HIGH
         5 => (RS => '1', DATA => X"38", DELAY => WT_DEFAULT) -- ADB LOW
     );
     
@@ -149,7 +149,7 @@ BEGIN
   
     IF RST = '1' THEN                 		-- asynchronous global ST_RESET (active high) 
       LCD_EN <= '0';
-      LCD_DATA <= (OTHERS => '0');
+      sLCD_DATA_I <= (OTHERS => '0');
       LCD_RS <= '0';
       sCONFIG_FLAG <= '0';
       sSTATE <= INIT;
