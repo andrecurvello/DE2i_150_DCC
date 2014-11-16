@@ -1,0 +1,130 @@
+  ----------------------------------------------------------------------------------
+-- Copyright (c) 2014, Luis Ardila
+-- E-mail: leardilap@unal.edu.co
+
+-- Revisions: 
+-- Date        	Version    	Author    		Description
+-- 10/11/2014    	1.0    		Luis Ardila    File created
+--
+----------------------------------------------------------------------------------
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+
+ENTITY HEX2LCD IS
+  PORT(
+		CLK				: IN STD_LOGIC;
+		RST				: IN STD_LOGIC;
+		ADA_DATA_IN    : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		ADA_DATA_EN    : IN STD_LOGIC;
+		ADB_DATA_IN		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		ADB_DATA_EN    : IN STD_LOGIC;  
+		ADA_H 			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
+		ADA_L 			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
+		ADB_H 			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
+		ADB_L 			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+	);
+END HEX2LCD;
+
+ARCHITECTURE HEX2LCD_ARCH OF HEX2LCD IS
+
+SIGNAL sADA_DATA_IN	: STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
+SIGNAL sADB_DATA_IN	: STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
+
+BEGIN
+
+  AD_REGISTER : PROCESS (CLK, RST) IS
+  BEGIN
+  
+	 IF RST = '1' THEN                 		-- asynchronous global ST_RESET (active high) 
+	 
+      sADA_DATA_IN <= (OTHERS => '0');
+      sADB_DATA_IN <= (OTHERS => '0');
+		
+    ELSIF RISING_EDGE(CLK) THEN  					-- rising clock edge 
+		
+		IF ADA_DATA_EN = '1' THEN 
+			sADA_DATA_IN <= ADA_DATA_IN;
+		END IF;
+		
+		IF ADB_DATA_EN = '1' THEN 
+			sADB_DATA_IN <= ADB_DATA_IN;
+		END IF;
+		
+	 END IF;
+	 
+  END PROCESS AD_REGISTER;
+  
+ ADA_H <= x"30" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"0" ELSE
+			 x"31" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"1" ELSE
+			 x"32" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"2" ELSE
+			 x"33" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"3" ELSE
+			 x"34" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"4" ELSE
+			 x"35" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"5" ELSE
+			 x"36" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"6" ELSE
+			 x"37" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"7" ELSE
+			 x"38" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"8" ELSE
+			 x"39" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"9" ELSE
+			 x"41" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"A" ELSE
+			 x"42" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"B" ELSE
+			 x"43" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"C" ELSE
+			 x"44" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"D" ELSE
+			 x"45" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"E" ELSE
+			 x"46" WHEN sADA_DATA_IN(7 DOWNTO 4) = x"F" ELSE
+			 x"57"; --X
+			 
+ ADA_L <= x"30" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"0" ELSE
+			 x"31" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"1" ELSE
+			 x"32" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"2" ELSE
+			 x"33" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"3" ELSE
+			 x"34" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"4" ELSE
+			 x"35" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"5" ELSE
+			 x"36" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"6" ELSE
+			 x"37" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"7" ELSE
+			 x"38" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"8" ELSE
+			 x"39" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"9" ELSE
+			 x"41" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"A" ELSE
+			 x"42" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"B" ELSE
+			 x"43" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"C" ELSE
+			 x"44" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"D" ELSE
+			 x"45" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"E" ELSE
+			 x"46" WHEN sADA_DATA_IN(3 DOWNTO 0) = x"F" ELSE
+			 x"57"; --X
+			 
+ ADB_H <= x"30" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"0" ELSE
+			 x"31" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"1" ELSE
+			 x"32" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"2" ELSE
+			 x"33" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"3" ELSE
+			 x"34" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"4" ELSE
+			 x"35" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"5" ELSE
+			 x"36" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"6" ELSE
+			 x"37" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"7" ELSE
+			 x"38" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"8" ELSE
+			 x"39" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"9" ELSE
+			 x"41" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"A" ELSE
+			 x"42" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"B" ELSE
+			 x"43" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"C" ELSE
+			 x"44" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"D" ELSE
+			 x"45" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"E" ELSE
+			 x"46" WHEN sADB_DATA_IN(7 DOWNTO 4) = x"F" ELSE
+			 x"57"; --X
+			 
+ ADB_L <= x"30" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"0" ELSE
+			 x"31" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"1" ELSE
+			 x"32" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"2" ELSE
+			 x"33" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"3" ELSE
+			 x"34" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"4" ELSE
+			 x"35" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"5" ELSE
+			 x"36" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"6" ELSE
+			 x"37" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"7" ELSE
+			 x"38" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"8" ELSE
+			 x"39" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"9" ELSE
+			 x"41" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"A" ELSE
+			 x"42" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"B" ELSE
+			 x"43" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"C" ELSE
+			 x"44" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"D" ELSE
+			 x"45" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"E" ELSE
+			 x"46" WHEN sADB_DATA_IN(3 DOWNTO 0) = x"F" ELSE
+			 x"57"; --X		
+			 
+END ARCHITECTURE HEX2LCD_ARCH;
