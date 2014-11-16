@@ -48,7 +48,7 @@ ARCHITECTURE AD_SPI_CONTROLLER_ARCH OF AD_SPI_CONTROLLER IS
 	
 	SIGNAL sAD_SDI				: STD_LOGIC := '0';
 	SIGNAL sAD_SDO				: STD_LOGIC := '0';
-	SIGNAL sAD_SDIO_IO		: STD_LOGIC := '0';
+	SIGNAL sAD_SDIO_OE		: STD_LOGIC := '0';
 	
 BEGIN
 
@@ -58,7 +58,7 @@ BEGIN
     )
   PORT MAP(
     i => sAD_SDI,
-    oe => sAD_SDIO_IO,
+    oe => sAD_SDIO_OE,
     io => AD_SDIO,
     o => sAD_SDO
     );    
@@ -72,7 +72,7 @@ BEGIN
 			SPI_BUSY				<= '1';
 			AD_SCLK				<= '0';
 			sAD_SDI 				<= '0';
-			sAD_SDIO_IO			<= '1';  				--OUTPUT (NEED CHECK)
+			sAD_SDIO_OE			<= '1';  				--OUTPUT (NEED CHECK)
 			ADA_SPI_CS_n 		<= '1';
 			ADB_SPI_CS_n 		<= '1';
 			
@@ -92,7 +92,7 @@ BEGIN
 					sSEL_FLAG_B		<= '0';
 					ADA_SPI_CS_n 	<= '1';
 					ADB_SPI_CS_n 	<= '1';
-					sAD_SDIO_IO 	<= '1';  										            --OUTPUT (NEED CHECK)
+					sAD_SDIO_OE 	<= '1';  										            --OUTPUT (NEED CHECK)
 					sCnt <= 0; 										
 					IF SPI_DATA_IN_WEA = '1' THEN 
 						sSEL_FLAG_A <= '1';
@@ -145,7 +145,7 @@ BEGIN
 				WHEN ADDRESS_SHIFT_L =>
 					
 					AD_SCLK <= '0';
-					sAD_SDIO_IO <= '1';  										--OUTPUT (NEED CHECK)
+					sAD_SDIO_OE <= '1';  										--OUTPUT (NEED CHECK)
 					sAD_SDI <= sSPI_ADDRESS(15);
 					sSPI_ADDRESS <= sSPI_ADDRESS(14 DOWNTO 0) & '0';
 					IF sSEL_FLAG_A = '1' THEN
@@ -171,7 +171,7 @@ BEGIN
 				
 				WHEN DATA_READ_L =>
 					AD_SCLK <= '0';
-					sAD_SDIO_IO <= '0';  										--INPUT (NEED CHECK)
+					sAD_SDIO_OE <= '0';  										--INPUT (NEED CHECK)
 					sSPI_State <= DATA_READ_H; 
 				
 				WHEN DATA_READ_H =>
@@ -194,7 +194,7 @@ BEGIN
 					
 				WHEN DATA_WRITE_L =>
 					AD_SCLK <= '0';
-					sAD_SDIO_IO <= '1';  										--OUTPUT (NEED CHECK)
+					sAD_SDIO_OE <= '1';  										--OUTPUT (NEED CHECK)
 					sAD_SDI <= sSPI_DATA_IN(7);
 					sSPI_DATA_IN <= sSPI_DATA_IN(6 DOWNTO 0) & '0';
 					sSPI_State <= DATA_WRITE_H;
