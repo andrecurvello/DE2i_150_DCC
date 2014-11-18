@@ -7,6 +7,7 @@ end tb_LCD16x2;
 architecture tb of tb_LCD16x2 is
 
     component LCD16x2
+        generic (CLK_PERIOD_NS : positive := 20);
         port (CLK         : in std_logic;
               RST         : in std_logic;
               ADA_DATA_IN : in std_logic_vector (7 downto 0);
@@ -38,6 +39,7 @@ architecture tb of tb_LCD16x2 is
 begin
 
     dut : LCD16x2
+    generic map (CLK_PERIOD_NS => 100)
     port map (CLK         => CLK,
               RST         => RST,
               ADA_DATA_IN => ADA_DATA_IN,
@@ -57,13 +59,18 @@ begin
 
     stimuli : process
     begin
-        -- EDIT
+        RST <= '1';
+        ADA_DATA_IN <= x"11";
+        ADA_DATA_EN <= '0';
+        ADB_DATA_IN <= x"12";
+        ADB_DATA_EN <= '0';
+        wait for TbPeriod*10;
+        RST <= '0';
+        ADA_DATA_IN <= x"12";
+        ADA_DATA_EN <= '0';
+        ADB_DATA_IN <= x"13";
+        ADB_DATA_EN <= '0';
         wait;
     end process;
 
 end tb;
-
-configuration cfg_tb_LCD16x2 of tb_LCD16x2 is
-    for tb
-    end for;
-end cfg_tb_LCD16x2;

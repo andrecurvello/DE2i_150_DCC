@@ -161,11 +161,12 @@ BEGIN
         
         WHEN INIT =>
           LCD_EN <= '0';
-          sCnt	<= sCnt - 1;     --waiting for initial delay of 20 ms
           sLCD_RW <= '0';
           IF (sCnt = 0) THEN 
             sSTATE <= CONFIG;
             sConfig_ptr <= 0;
+          ELSE
+            sCnt	<= sCnt - 1;     --waiting for initial delay of 20 ms
           END IF;
         
         WHEN CONFIG =>
@@ -181,40 +182,45 @@ BEGIN
           ELSE
             sCONFIG_FLAG <= '1';
             sData_ptr <= 0;
+				sSTATE <= IDLE;
           END IF;     
         
         WHEN SETUP =>
           LCD_EN <= '0';
-          sCnt	<= sCnt - 1;     --waiting for setup time of 140 ns
           IF (sCnt = 0) THEN 
             sSTATE <= ENABLE;
             sCnt <= WT_ENABLE;
+          ELSE
+            sCnt	<= sCnt - 1;     --waiting for setup time of 140 ns
           END IF;
           
         WHEN ENABLE =>
           LCD_EN <= '1';
-          sCnt	<= sCnt - 1;     --waiting for enable time of 300 ns
           IF (sCnt = 0) THEN 
             sSTATE <= HOLD;
             sCnt <= WT_HOLD;
+          ELSE
+            sCnt	<= sCnt - 1;     --waiting for enable time of 300 ns
           END IF;
         
         WHEN HOLD =>
           LCD_EN <= '0';
-          sCnt	<= sCnt - 1;     --waiting for hold time of 140 ns
           IF (sCnt = 0) THEN 
             sSTATE <= DELAY;
             IF sCONFIG_FLAG = '0' THEN 
               sCnt <= sLCD_Cnt;
             ELSE 
               sCnt <= WT_DEFAULT; 
-            END IF;           
+            END IF;
+          ELSE
+            sCnt	<= sCnt - 1;     --waiting for hold time of 140 ns           
           END IF;
           
         WHEN DELAY => 
-          sCnt	<= sCnt - 1;     --waiting for variable delay time
           IF (sCnt = 0) THEN 
             sSTATE <= IDLE;
+          ELSE
+            sCnt	<= sCnt - 1;     --waiting for variable delay time
           END IF;
     
         WHEN IDLE =>
@@ -228,7 +234,6 @@ BEGIN
           END IF;
         
         WHEN BUSY =>
-          sCnt	<= sCnt - 1;     --waiting for variable delay time
           IF (sCnt = 0) THEN 
             sData_op(1).DATA <= sADA_H;
             sData_op(2).DATA <= sADA_L;
@@ -246,6 +251,8 @@ BEGIN
               sSTATE      <= SETUP;
               sCnt        <= WT_SETUP;
             END IF;
+			 ELSE
+				sCnt	<= sCnt - 1;     --waiting for variable delay time
           END IF;
           
         WHEN OTHERS =>
