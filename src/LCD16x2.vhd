@@ -51,7 +51,7 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
 	);
 	END COMPONENT;
 	
-  TYPE State_Type IS (INIT, CONFIG, SETUP, ENABLE, HOLD, DELAY, IDLE, BUSY);  
+  TYPE State_Type IS (INIT, CONFIG, SETUP, ENABLE, HOLD, DELAY, IDLE);  
   SIGNAL sSTATE       : State_Type := IDLE;
   
   CONSTANT WT_INIT    : INTEGER := 20000000 / CLK_PERIOD_NS + 1;    -- 20 ms
@@ -62,8 +62,8 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
   CONSTANT WT_HOLD    : INTEGER := 140 / CLK_PERIOD_NS + 1;         -- 140 ns
   
   SIGNAL sCnt         : INTEGER RANGE 0 TO WT_INIT := WT_INIT;
-  SIGNAL sData_ptr    : INTEGER RANGE 0 TO 5 := 0;
-  SIGNAL sConfig_ptr  : INTEGER RANGE 0 TO 14 := 0;
+  SIGNAL sData_ptr    : INTEGER RANGE 0 TO 6 := 0;
+  SIGNAL sConfig_ptr  : INTEGER RANGE 0 TO 15 := 0;
   SIGNAL sLCD_Cnt     : INTEGER RANGE 0 TO WT_INIT := 0;
   
   TYPE Op_type IS RECORD
@@ -78,7 +78,7 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
         1 => (RS => '0', DATA => X"30", DELAY => WT_INIT), -- 8 bits
         2 => (RS => '0', DATA => X"38", DELAY => WT_INIT), -- 8 bits, 2 lines, 8*5 
         3 => (RS => '0', DATA => X"38", DELAY => WT_DEFAULT), -- 8 bits, 2 lines, 8x5
-        4 => (RS => '0', DATA => X"0C", DELAY => WT_DEFAULT), -- display off
+        4 => (RS => '0', DATA => X"0E", DELAY => WT_DEFAULT), -- display on
         5 => (RS => '0', DATA => X"01", DELAY => WT_HOME),  -- display clear
         6 => (RS => '1', DATA => X"41", DELAY => WT_DEFAULT), -- A
         7 => (RS => '1', DATA => X"44", DELAY => WT_DEFAULT), -- D
@@ -93,15 +93,13 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
     
   TYPE Data_op_type IS ARRAY(0 TO 5) OF Op_type;
   SIGNAL sData_op : Data_op_type
-    := (0 => (RS => '0', DATA => X"80", DELAY => WT_DEFAULT), -- Address 0
+    := (0 => (RS => '0', DATA => X"84", DELAY => WT_DEFAULT), -- Address 4
         1 => (RS => '1', DATA => X"30", DELAY => WT_DEFAULT), -- ADA HIGH
         2 => (RS => '1', DATA => X"38", DELAY => WT_DEFAULT), -- ADA LOW
-        3 => (RS => '0', DATA => X"C0", DELAY => WT_DEFAULT), -- Address 40
+        3 => (RS => '0', DATA => X"C4", DELAY => WT_DEFAULT), -- Address 44
         4 => (RS => '1', DATA => X"30", DELAY => WT_DEFAULT), -- ADB HIGH
         5 => (RS => '1', DATA => X"38", DELAY => WT_DEFAULT) -- ADB LOW
     );
-    
-  SIGNAL sLCD_RW : STD_LOGIC := '0';
   SIGNAL sLCD_DATA_OE : STD_LOGIC := '0';
   
   SIGNAL sLCD_DATA_I : STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
@@ -118,9 +116,6 @@ BEGIN
   
   LCD_DATA_GEN : FOR i IN 0 TO 7 GENERATE
     iobuff : alt_iobuf 
-      GENERIC MAP( 
-        WEAK_PULL_UP_RESISTOR => "ON" 
-        ) 
       PORT MAP( 
         i => sLCD_DATA_I(i), 
         oe => sLCD_DATA_OE, 
@@ -153,7 +148,7 @@ BEGIN
       LCD_RS <= '0';
       sCONFIG_FLAG <= '0';
       sSTATE <= INIT;
-      sLCD_RW <= '0';              --write
+      
           
     ELSIF RISING_EDGE(CLK) THEN  					-- rising clock edge 
       
@@ -161,7 +156,6 @@ BEGIN
         
         WHEN INIT =>
           LCD_EN <= '0';
-          sLCD_RW <= '0';
           IF (sCnt = 0) THEN 
             sSTATE <= CONFIG;
             sConfig_ptr <= 0;
@@ -171,7 +165,6 @@ BEGIN
         
         WHEN CONFIG =>
           LCD_EN <= '0';
-          sLCD_RW <= '0';
           IF sConfig_ptr < 15 then
             sConfig_ptr <= sConfig_ptr + 1;
             sLCD_DATA_I    <= sConfig_op(sConfig_ptr).DATA;
@@ -182,7 +175,7 @@ BEGIN
           ELSE
             sCONFIG_FLAG <= '1';
             sData_ptr <= 0;
-				sSTATE <= IDLE;
+				    sSTATE <= IDLE;
           END IF;     
         
         WHEN SETUP =>
@@ -224,35 +217,23 @@ BEGIN
           END IF;
     
         WHEN IDLE =>
-          LCD_RS <= '1';
-          sLCD_RW <= '1';                     --read
           IF sCONFIG_FLAG = '0' THEN 
             sSTATE <= CONFIG;
           ELSE 
-            sSTATE <= BUSY;
-            sCnt <= WT_DEFAULT;
-          END IF;
-        
-        WHEN BUSY =>
-          IF (sCnt = 0) THEN 
             sData_op(1).DATA <= sADA_H;
             sData_op(2).DATA <= sADA_L;
             sData_op(4).DATA <= sADB_H;
             sData_op(5).DATA <= sADB_L;
-            IF sLCD_DATA_O(7) = '0' THEN
-              IF sData_ptr = 5 THEN
-                sData_ptr <= 0;
-              ELSE
-                sData_ptr   <= sData_ptr + 1;
-              END IF;
-              sLCD_DATA_I <= sData_op(sData_ptr).DATA;
-              LCD_RS      <= sData_op(sData_ptr).RS;
-              sLCD_Cnt    <= sData_op(sData_ptr).DELAY;
-              sSTATE      <= SETUP;
-              sCnt        <= WT_SETUP;
-            END IF;
-			 ELSE
-				sCnt	<= sCnt - 1;     --waiting for variable delay time
+				IF sData_ptr = 5 THEN
+					sData_ptr <= 0;
+				ELSE
+					sData_ptr   <= sData_ptr + 1;
+				END IF;
+				sLCD_DATA_I <= sData_op(sData_ptr).DATA;
+				LCD_RS      <= sData_op(sData_ptr).RS;
+				sLCD_Cnt    <= sData_op(sData_ptr).DELAY;
+				sSTATE      <= SETUP;
+				sCnt        <= WT_SETUP;
           END IF;
           
         WHEN OTHERS =>
@@ -262,11 +243,9 @@ BEGIN
     END IF;
     
   END PROCESS STATE_MACHINE;
-
-  
-  LCD_RW <= sLCD_RW;
-  
-  sLCD_DATA_OE <= not sLCD_RW;
+  LCD_RW <= '0';              --write always
+   
+  sLCD_DATA_OE <= '1';			--output always
   
   LCD_ON <= '1';
   
