@@ -1,7 +1,9 @@
 ----------------------------------------------------------------------------------
 -- Copyright (c) 2014, Luis Ardila
 -- E-mail: leardilap@unal.edu.co
-
+--
+-- Description:
+--
 -- Revisions: 
 -- Date        	Version    	Author    		Description
 -- 12/10/2014    	1.0    		Luis Ardila    File created
@@ -206,13 +208,87 @@ END DE2i_150_DCC_TOP;
 
 ARCHITECTURE DE2i_150_DCC_TOP_ARCH OF DE2i_150_DCC_TOP IS
 
+---------------------------------------------------------------
+-- COMPONENTS 
+---------------------------------------------------------------
+
 COMPONENT PLL_1 IS 
 PORT (
-		inclk0		: IN STD_LOGIC  := '0';
-		c0				: OUT STD_LOGIC;
-		c1		: OUT STD_LOGIC 
-		);
+	inclk0		: IN STD_LOGIC  := '0';
+	c0				: OUT STD_LOGIC ;
+	c1				: OUT STD_LOGIC ;
+	c2				: OUT STD_LOGIC ;
+	c3				: OUT STD_LOGIC ;
+	locked		: OUT STD_LOGIC 
+	);
 END COMPONENT PLL_1;
+
+COMPONENT HSMC_DCC IS 
+PORT (
+	CLK				: IN STD_LOGIC;
+	CLK_180			: IN STD_LOGIC;
+	CLK_270			: IN STD_LOGIC;
+	RST				: IN STD_LOGIC;
+	-- SPI CONTROL
+	SPI_ADDRESS			: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+	SPI_DATA_IN			: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+	SPI_DATA_RW			: IN STD_LOGIC;								--1 READ - 0 WRITE
+	SPI_ADA_IN_WE		: IN STD_LOGIC;
+	SPI_ADB_IN_WE		: IN STD_LOGIC;
+	SPI_AIC_IN_WE		: IN STD_LOGIC;
+	SPI_DATA_OUT		: OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+	SPI_ADA_OUT_WE		: OUT STD_LOGIC;
+	SPI_ADB_OUT_WE	   : OUT STD_LOGIC;
+	SPI_AIC_OUT_WE		: OUT STD_LOGIC;
+	SPI_BUSY				: OUT STD_LOGIC;
+	-- ADC DATA
+	ADA_DOUT			: OUT STD_LOGIC_VECTOR(13 DOWNTO 0);
+	ADB_DOUT			: OUT STD_LOGIC_VECTOR(13 DOWNTO 0);
+	-- DAC DATA
+	DA_DIN			: IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+	DB_DIN			: IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+	-- TO HSMC CONNECTOR DCC
+	CLKIN1			: IN STD_LOGIC; 					--TP1
+	CLKOUT0			: OUT STD_LOGIC;					--TP2
+	J1_152			: OUT STD_LOGIC;					--TP5
+	-- I2C EEPROM
+	SCL				: OUT STD_LOGIC;					
+	SDA				: INOUT STD_LOGIC;	
+		
+	XT_IN_N			: IN STD_LOGIC;
+	XT_IN_P			: IN STD_LOGIC;
+	
+	FPGA_CLK_A_N	: OUT STD_LOGIC;
+	FPGA_CLK_A_P 	: OUT STD_LOGIC;
+	FPGA_CLK_B_N	: OUT STD_LOGIC;
+	FPGA_CLK_B_P 	: OUT STD_LOGIC;
+
+	ADA_D				: IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+	ADA_OR			: IN STD_LOGIC;					-- Out of range
+	ADA_SPI_CS		: OUT STD_LOGIC;					-- Chip Select = 0
+	ADA_OE			: OUT STD_LOGIC;					-- Enable = 0
+	ADA_DCO			: IN STD_LOGIC;					-- Data clock output
+	
+	ADB_D				: IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+	ADB_OR			: IN STD_LOGIC;					-- Out of range
+	ADB_SPI_CS		: OUT STD_LOGIC;              -- Chip Select = 0
+	ADB_OE			: OUT STD_LOGIC;              -- Enable = 0
+	ADB_DCO			: IN STD_LOGIC;               -- Data clock output
+	
+	DA					: OUT STD_LOGIC_VECTOR(13 DOWNTO 0);
+	DB					: OUT STD_LOGIC_VECTOR(13 DOWNTO 0);
+	-- Audio CODEC
+	AIC_XCLK			: IN STD_LOGIC;					-- Crystal or external-clock input
+	AIC_LRCOUT		: INOUT STD_LOGIC;				-- I2S ADC-word clock signal
+	AIC_LRCIN		: INOUT STD_LOGIC;				-- I2S DAC-word clock signal.
+	AIC_DIN			: OUT STD_LOGIC;					-- I2S format serial data input to the sigma delta stereo DAC
+	AIC_DOUT			: IN STD_LOGIC;					-- Output
+	AD_SCLK			: OUT STD_LOGIC;					-- SPI
+	AD_SDIO			: INOUT STD_LOGIC;				-- SPI
+	AIC_SPI_CS		: OUT STD_LOGIC;					-- Chip Select = 0  (low active)
+	AIC_BCLK			: INOUT STD_LOGIC					-- I2S serial-bit clock.
+	);
+END COMPONENT HSMC_DCC;
 
 COMPONENT HEX_MODULE IS
 	PORT (
@@ -235,27 +311,6 @@ COMPONENT HEX_MODULE IS
 		);
 END COMPONENT HEX_MODULE;
 
-COMPONENT AD_SPI_CONTROLLER IS
-PORT(
-	CLK10					: IN STD_LOGIC;								-- 10 MHz
-	RST					: IN STD_LOGIC;
-	SPI_ADDRESS			: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	SPI_DATA_IN			: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	SPI_DATA_RW			: IN STD_LOGIC;								--1 READ - 0 WRITE
-	SPI_DATA_IN_WEA	: IN STD_LOGIC;
-	SPI_DATA_IN_WEB	: IN STD_LOGIC;
-	SPI_DATA_OUT		: OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-	SPI_DATA_OUT_WEA	: OUT STD_LOGIC;
-	SPI_DATA_OUT_WEB	: OUT STD_LOGIC;
-	SPI_BUSY				: OUT STD_LOGIC;
-	-- ADCs SPI INTERFACE
-	AD_SCLK				: OUT STD_LOGIC;
-	AD_SDIO				: INOUT STD_LOGIC;
-	ADA_SPI_CS_n		: OUT STD_LOGIC;
-	ADB_SPI_CS_n		: OUT STD_LOGIC
-	);
-END COMPONENT AD_SPI_CONTROLLER;
-
 COMPONENT LCD16x2 IS 
 GENERIC (
   CLK_PERIOD_NS : POSITIVE := 20);    -- 50MHz   --POSITIVE is INTEGER but from 1 to 2147483647
@@ -275,14 +330,23 @@ PORT (
 	);
 END COMPONENT LCD16x2;
 
+---------------------------------------------------------------------------
+-- SIGNALS 
+---------------------------------------------------------------------------
+
+-- CLOCK PLL SIGNALS 
+SIGNAL sCLK100			: STD_LOGIC := '0';
+SIGNAL sCLK100_90		: STD_LOGIC := '0';
+SIGNAL sCLK100_180	: STD_LOGIC := '0';
+SIGNAL sCLK100_270	: STD_LOGIC := '0';
+SIGNAL sLocked 		: STD_LOGIC := '0';
+
 -- SIGNALs FOR OUTSIDE
 SIGNAL	RST			:	STD_LOGIC; 	
 SIGNAL	SUB			:	STD_LOGIC; 	
 SIGNAL	ADD         :	STD_LOGIC; 	
 SIGNAL	SEG_0		:	STD_LOGIC_VECTOR (6 DOWNTO 0); --Seven Segments ¨HEX0¨ 
 
-SIGNAL sCLK10 				: STD_LOGIC := '0';
-SIGNAL sCLK5k 				: STD_LOGIC := '0';
 SIGNAL sADD					: 	STD_LOGIC := '0';
 SIGNAL sSUB					: 	STD_LOGIC := '0';
 SIGNAL sHDIG				:	STD_LOGIC_VECTOR (3 DOWNTO 0) := (OTHERS => '0');
@@ -298,49 +362,100 @@ SIGNAL sSPI_BUSY				: STD_LOGIC := '0';
 
 SIGNAL sADA_DATA_EN			: STD_LOGIC := '0';
 SIGNAL sADB_DATA_EN			: STD_LOGIC := '0';
+SIGNAL sADA_DOUT				: STD_LOGIC_VECTOR (13 DOWNTO 0);
+SIGNAL sADB_DOUT				: STD_LOGIC_VECTOR (13 DOWNTO 0);
 
 
-SIGNAL sSPI_CNT  				: INTEGER RANGE 0 to 65500 := 0;
+SIGNAL sSPI_CNT  				: INTEGER RANGE 0 to 655000 := 0;
 
 BEGIN 
 
 PLL_1_inst : PLL_1 
 PORT MAP (
 		inclk0	=> CLOCK_50,
-		c0	 		=> sCLK10,
-		c1			=> sCLK5k
+		c0	 		=> sCLK100,
+		c1			=> sCLK100_90,
+		c2			=> sCLK100_180,
+		c3			=> sCLK100_270,
+		locked	=> sLocked
 		);
-		
-AD_SPI_CONTROLLER_inst : AD_SPI_CONTROLLER
-PORT MAP (
-	CLK10						=> sCLK10,
-	RST						=> RST,
-	SPI_ADDRESS				=> SW(15 DOWNTO 8),
-	SPI_DATA_IN				=> SW(7 DOWNTO 0),
-	SPI_DATA_RW				=> SW(17),							--1 READ - 0 WRITE
-	SPI_DATA_IN_WEA	   => sSPI_DATA_IN_WEA,
-	SPI_DATA_IN_WEB	   => '0',
-	SPI_DATA_OUT			=> sSPI_DATA_OUT,
-	SPI_DATA_OUT_WEA		=> sSPI_DATA_OUT_WEA,
-	SPI_DATA_OUT_WEB		=> sSPI_DATA_OUT_WEB,
-	SPI_BUSY					=> sSPI_BUSY,
-	-- ADCs SPI INTERFACE
-	AD_SCLK					=> HSMC_AD_SCLK,	
-	AD_SDIO					=> HSMC_AD_SDIO,			
-	ADA_SPI_CS_n			=> HSMC_ADA_SPI_CS,
-	ADB_SPI_CS_n			=> HSMC_ADB_SPI_CS
+			
+HSMC_DCC_INST : HSMC_DCC
+PORT MAP(
+	CLK					=> sCLK100,
+	CLK_180				=> sCLK100_180,
+	CLK_270				=> sCLK100_270,
+	RST					=> RST,
+	-- SPI CONTROL
+	SPI_ADDRESS			=> SW(15 DOWNTO 8),
+	SPI_DATA_IN			=> SW(7 DOWNTO 0),
+	SPI_DATA_RW			=>	SW(17),					--1 READ - 0 WRITE
+	SPI_ADA_IN_WE		=> sSPI_DATA_IN_WEA,
+	SPI_ADB_IN_WE		=> '0',
+	SPI_AIC_IN_WE		=> '0',
+	SPI_DATA_OUT		=> sSPI_DATA_OUT,
+	SPI_ADA_OUT_WE		=> sSPI_DATA_OUT_WEA,
+	SPI_ADB_OUT_WE		=> sSPI_DATA_OUT_WEB,
+	SPI_AIC_OUT_WE		=> OPEN,
+	SPI_BUSY				=> sSPI_BUSY,
+	-- ADC DATA
+	ADA_DOUT				=> sADA_DOUT,
+	ADB_DOUT				=> sADB_DOUT,
+	-- DAC DATA
+	DA_DIN				=> (OTHERS => '0'),
+	DB_DIN				=> (OTHERS => '0'),
+	-- TO HSMC CONNECTOR DCC
+	CLKIN1				=> HSMC_CLKIN1,								--TP1
+	CLKOUT0				=> HSMC_CLKOUT0,							--TP2
+	J1_152				=> HSMC_J1_152,								--TP5
+	-- I2C EEPROM	      
+	SCL					=> HSMC_SCL,									
+	SDA					=> HSMC_SDA,				
+			               
+	XT_IN_N				=> HSMC_XT_IN_N,		
+	XT_IN_P				=> HSMC_XT_IN_P,		
+		                  
+	FPGA_CLK_A_N		=> HSMC_FPGA_CLK_A_N,	
+	FPGA_CLK_A_P 		=> HSMC_FPGA_CLK_A_P, 
+	FPGA_CLK_B_N		=> HSMC_FPGA_CLK_B_N,	
+	FPGA_CLK_B_P 		=> HSMC_FPGA_CLK_B_P, 
+                        
+	ADA_D					=> HSMC_ADA_D,			
+	ADA_OR				=> HSMC_ADA_OR,			-- Out of range
+	ADA_SPI_CS			=> HSMC_ADA_SPI_CS,	-- Chip Select = 0
+	ADA_OE				=> HSMC_ADA_OE,			-- Enable = 0
+	ADA_DCO				=> HSMC_ADA_DCO,		-- Data clock output
+	                     
+	ADB_D					=> HSMC_ADB_D,			
+	ADB_OR				=> HSMC_ADB_OR,			-- Out of range
+	ADB_SPI_CS			=> HSMC_ADB_SPI_CS,	-- Chip Select = 0
+	ADB_OE				=> HSMC_ADB_OE,			-- Enable = 0
+	ADB_DCO				=> HSMC_ADB_DCO,		-- Data clock output
+	                     
+	DA						=> HSMC_DA,				
+	DB						=> HSMC_DB,				
+	-- Audio CODEC	      
+	AIC_XCLK				=> HSMC_AIC_XCLK,		-- Crystal or external-clock input
+	AIC_LRCOUT			=> HSMC_AIC_LRCOUT,	-- I2S ADC-word clock signal
+	AIC_LRCIN			=> HSMC_AIC_LRCIN,		-- I2S DAC-word clock signal.
+	AIC_DIN				=> HSMC_AIC_DIN,		-- I2S format serial data input to the sigma delta stereo DAC
+	AIC_DOUT				=> HSMC_AIC_DOUT,		-- Output
+	AD_SCLK				=> HSMC_AD_SCLK,		-- SPI
+	AD_SDIO				=> HSMC_AD_SDIO,		-- SPI
+	AIC_SPI_CS			=> HSMC_AIC_SPI_CS,	-- Chip Select = 0  (low active)
+	AIC_BCLK				=> HSMC_AIC_BCLK		-- I2S serial-bit clock.
 	);
 	
 LCD16x2_INST : LCD16x2
 GENERIC MAP(
-	CLK_PERIOD_NS => 100)    -- 10MHz   --POSITIVE is INTEGER but from 1 to 2147483647
+	CLK_PERIOD_NS => 10)    -- 10MHz   --POSITIVE is INTEGER but from 1 to 2147483647
 PORT MAP(	
-	CLK            => sCLK10,
+	CLK            => sCLK100,
 	RST            => RST,
-	ADA_DATA_IN    => sSPI_DATA_OUT,
-	ADA_DATA_EN    => sADA_DATA_EN,
-	ADB_DATA_IN		=> sSPI_DATA_OUT,
-	ADB_DATA_EN    => sADB_DATA_EN,   
+	ADA_DATA_IN    => sADA_DOUT(7 DOWNTO 0),
+	ADA_DATA_EN    => sCLK100,
+	ADB_DATA_IN		=> sADB_DOUT(7 DOWNTO 0),
+	ADB_DATA_EN    => sCLK100,   
 	--LCD INTERFACE
 	LCD_DATA       => LCD_DATA,
 	LCD_EN			=> LCD_EN,
@@ -348,33 +463,7 @@ PORT MAP(
 	LCD_RS			=> LCD_RS,
 	LCD_RW			=> LCD_RW
 	);
-	
-LCD16x2_EN_LATCH : PROCESS (sCLK10, RST) IS
-BEGIN
-	IF RST = '1' THEN
-	
-		sADA_DATA_EN	<= '0';
-		sADB_DATA_EN 	<= '0';
-		
-	ELSIF rising_edge(sCLK10) THEN
-	
-		sSPI_DATA_OUT_WEA_BUFF <= sSPI_DATA_OUT_WEA;
-		sSPI_DATA_OUT_WEB_BUFF <= sSPI_DATA_OUT_WEB;
-		
-		IF sSPI_DATA_OUT_WEA_BUFF = '0' AND sSPI_DATA_OUT_WEA = '1' THEN
-			sADA_DATA_EN	<= '1';
-		ELSE 
-			sADA_DATA_EN	<= '0';
-		END IF;
-		
-		IF sSPI_DATA_OUT_WEB_BUFF = '0' AND sSPI_DATA_OUT_WEB = '1' THEN
-			sADB_DATA_EN	<= '1';
-		ELSE 
-			sADB_DATA_EN	<= '0';
-		END IF;
-	END IF;
-		
-END PROCESS LCD16x2_EN_LATCH;
+
 
 HEX_MODULE_INST : HEX_MODULE
 PORT MAP(
@@ -396,14 +485,14 @@ PORT MAP(
 		HEX_7		=> HEX7
 		);
 
-AD_SPI_PROCESS : PROCESS (sCLK10, RST) IS
+AD_SPI_PROCESS : PROCESS (sCLK100, RST) IS
 BEGIN
 	IF RST = '1' THEN
 		sSPI_DATA_IN_WEA <= '0';
-	ELSIF rising_edge(sCLK10) AND sSPI_BUSY = '0' THEN
+	ELSIF rising_edge(sCLK100) AND sSPI_BUSY = '0' THEN
 		sSPI_DATA_IN_WEA <= '0';
 		IF KEY(3) = '0' THEN
-			IF sSPI_CNT > 65000 THEN
+			IF sSPI_CNT > 650000 THEN
 				sSPI_DATA_IN_WEA <= '1';
 				sSPI_CNT <= 0;
 			ELSE 
@@ -415,12 +504,12 @@ BEGIN
 	
 END PROCESS AD_SPI_PROCESS;
 
-COUNTER: PROCESS (sCLK10, RST) IS
+COUNTER: PROCESS (sCLK100, RST) IS
 BEGIN
 
 	IF RST = '1' THEN
 		sHDIG <= (OTHERS => '0');
-	ELSIF rising_edge(sCLK10) THEN
+	ELSIF rising_edge(sCLK100) THEN
 		sADD <= ADD;
 		sSUB <= SUB;
 		IF (sADD = '1') AND (ADD = '0')  AND (SUB = '1') THEN							--add
@@ -438,7 +527,7 @@ SUB		<= KEY(1);
 ADD		<= KEY(0); 
 
 LEDR		<= SW;
-LEDG 		<= b"00" & sHEX0;
+LEDG 		<= sLocked & b"0" & sHEX0;
 
 HEX0 		<= sHEX0;
 HEX1		<= (OTHERS => '1'); -- OFF

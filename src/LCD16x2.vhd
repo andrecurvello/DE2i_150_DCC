@@ -1,7 +1,9 @@
 ----------------------------------------------------------------------------------
 -- Copyright (c) 2014, Luis Ardila
 -- E-mail: leardilap@unal.edu.co
-
+--
+-- Description:
+--
 -- Revisions: 
 -- Date        	Version    	Author    		Description
 -- 10/11/2014    	1.0    		Luis Ardila    File created
@@ -17,10 +19,10 @@ use altera.altera_primitives_components.all;
 
 ENTITY LCD16x2 IS 
 GENERIC (
-  CLK_PERIOD_NS : POSITIVE := 20);    -- 50MHz   --POSITIVE is INTEGER but from 1 to 2147483647
+	CLK_PERIOD_NS : POSITIVE := 20);    -- 50MHz   --POSITIVE is INTEGER but from 1 to 2147483647
 PORT (	
-  CLK            : IN STD_LOGIC;
-  RST            : IN STD_LOGIC;
+   CLK            : IN STD_LOGIC;
+	RST            : IN STD_LOGIC;
 	ADA_DATA_IN    : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
 	ADA_DATA_EN    : IN STD_LOGIC;
 	ADB_DATA_IN			 : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
@@ -114,18 +116,18 @@ ARCHITECTURE LCD16x2_ARCH OF LCD16x2 IS
   
 BEGIN 
   
-  LCD_DATA_GEN : FOR i IN 0 TO 7 GENERATE
-    iobuff : alt_iobuf 
+	LCD_DATA_GEN : FOR i IN 0 TO 7 GENERATE
+		iobuff : alt_iobuf 
       PORT MAP( 
-        i => sLCD_DATA_I(i), 
-        oe => sLCD_DATA_OE, 
-        io => LCD_DATA(i), 
-        o => sLCD_DATA_O(i) 
-        );  
-  END GENERATE;   
+			i => sLCD_DATA_I(i), 
+			oe => sLCD_DATA_OE, 
+			io => LCD_DATA(i), 
+			o => sLCD_DATA_O(i) 
+			);  
+	END GENERATE;   
   
-  HEX2LCD_INST : HEX2LCD
-  PORT MAP(
+	HEX2LCD_INST : HEX2LCD
+	PORT MAP(
 		CLK				=> CLK,
 		RST				=> RST,
 		ADA_DATA_IN    => ADA_DATA_IN,
@@ -136,7 +138,7 @@ BEGIN
 		ADA_L 			=> sADA_L, 
 		ADB_H 			=> sADB_H, 
 		ADB_L 			=> sADB_L
-	);
+		);
     
   
   STATE_MACHINE : PROCESS (CLK, RST) IS
